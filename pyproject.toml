@@ -1,0 +1,54 @@
+[project]
+name = "cheznav"
+version = "0.1.0"
+description = "TUI for chezmoi"
+requires-python = ">=3.14"
+dependencies = [
+    "textual[syntax]>=8.0.0",
+]
+authors = [
+    { name = "David Jetelina" }
+]
+license = "MIT"
+keywords = ["chezmoi", "dotfiles", "tui"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Topic :: Utilities",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.urls]
+Homepage = "https://github.com/DJetelina/cheznav"
+Repository = "https://github.com/DJetelina/cheznav.git"
+Issues = "https://github.com/DJetelina/cheznav/issues"
+
+[dependency-groups]
+dev = [
+    "textual-dev>=1.8.0",
+    "ruff>=0.15.2",
+    "pre-commit>=4.0.0",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "pytest-textual-snapshot>=1.0.0",
+]
+
+[project.scripts]
+cheznav = "cheznav.main:main"
+
+[build-system]
+requires = ["uv_build>=0.10.11,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 144
+
+[tool.ruff.lint]
+select = ["E", "I", "ASYNC", "B", "A", "PIE", "PT", "SIM", "PTH", "N", "W", "PL", "UP", "RUF"]
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 72
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

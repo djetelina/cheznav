@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.venv/
+*.egg-info/
+dist/
+build/
+.idea/
+.claude/
+docs/
+uv.lock

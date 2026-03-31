@@ -1,0 +1,82 @@
+Screen {
+    layout: vertical;
+    layers: top normal;
+}
+
+#header {
+    height: 3;
+    layout: horizontal;
+}
+
+#pane-tabs {
+    height: 2;
+}
+
+#pane-tabs Tab {
+    width: 1fr;
+}
+
+#pane-container {
+    layout: horizontal;
+    height: 1fr;
+}
+
+#left-pane {
+    border-left: vkey $primary;
+    border-right: vkey $primary;
+    width: 1fr;
+}
+
+#left-pane:focus-within {
+    border-left: vkey $accent;
+    border-right: vkey $accent;
+}
+
+#right-pane {
+    border-left: vkey $primary;
+    border-right: vkey $primary;
+    width: 1fr;
+}
+
+#right-pane:focus-within {
+    border-left: vkey $accent;
+    border-right: vkey $accent;
+}
+
+HomeTree, ManagedTree {
+    scrollbar-color: $primary-darken-2;
+}
+
+HomeTree:focus, ManagedTree:focus {
+    scrollbar-color: $primary;
+}
+
+#diff-view {
+    height: 1fr;
+}
+
+#content-view {
+    height: 1fr;
+}
+
+#bottom-bar {
+    dock: bottom;
+    height: auto;
+}
+
+#bottom-bar Legend {
+    width: 100%;
+    height: 1;
+    background: $panel;
+    color: $text-muted;
+    text-align: right;
+    padding: 0 1;
+}
+
+#bottom-bar Footer {
+    dock: bottom;
+}
+
+ConfirmScreen, HelpScreen {
+    background: $background 80%;
+}

@@ -1,0 +1,40 @@
+name: pytest
+on:
+  pull_request:
+    paths:
+      - 'src/cheznav/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  build:
+    name: pytest
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.14"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv and set the python version
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+
+      - name: Run pytest
+        run: uv run pytest tests -v
+
+      - name: Upload snapshot report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: snapshot_report_textual
+          path: snapshot_report.html
+          overwrite: true
