@@ -19,6 +19,9 @@ Supports encrypted files, templates, executables, symlinks, directories, externa
 
 ```bash
 pipx install cheznav
+
+# or from AUR
+yay -S cheznav
 ```
 
 ## Usage
