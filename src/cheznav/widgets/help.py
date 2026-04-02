@@ -2,7 +2,7 @@ from typing import ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import BindingType
-from textual.containers import Container, VerticalScroll
+from textual.containers import VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Label
 

@@ -1,10 +1,10 @@
 [project]
 name = "cheznav"
-version = "0.1.0"
+version = "0.1.1"
 description = "TUI for chezmoi"
 requires-python = ">=3.14"
 dependencies = [
-    "textual[syntax]>=8.0.0",
+    "textual>=8.0.0",
 ]
 authors = [
     { name = "David Jetelina" }

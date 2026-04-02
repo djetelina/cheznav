@@ -12,7 +12,7 @@ from textual import on, work
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingType
 from textual.containers import Container
-from textual.widgets import DirectoryTree, Footer, Label, Tab, Tabs, Tree
+from textual.widgets import DirectoryTree, Footer, Tab, Tabs, Tree
 
 from cheznav import THEME, chezmoi
 from cheznav.chezmoi import ManagedEntry

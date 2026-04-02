@@ -14,8 +14,6 @@ from cheznav.chezmoi import ManagedEntry
 
 class HomeTree(DirectoryTree):
     ICON_FILE = ""
-    ICON_FOLDER = ""
-    ICON_FOLDER_OPEN = ""
 
     BINDINGS: ClassVar[list[BindingType]] = [
         Binding("enter", "open_actions", "Context menu"),

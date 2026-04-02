@@ -9,3 +9,4 @@ build/
 .claude/
 docs/
 uv.lock
+snapshot_report.html

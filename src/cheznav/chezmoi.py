@@ -116,12 +116,6 @@ async def execute_template(source_path: str) -> str:
     return _check(stdout, stderr, rc, "execute-template")
 
 
-async def diff(target: str) -> str:
-    stdout, _, _ = await _run(["diff", target])
-    # diff returns rc=1 when there are differences — not an error
-    return stdout
-
-
 async def cat(target: str) -> str:
     stdout, stderr, rc = await _run(["cat", target])
     return _check(stdout, stderr, rc, "cat")
@@ -143,13 +137,6 @@ async def chattr(target: str, changes: dict[str, bool]) -> tuple[str, str, int]:
 
 async def re_add(target: str) -> tuple[str, str, int]:
     return await _run(["re-add", target])
-
-
-async def edit(target: str, apply: bool = True) -> tuple[str, str, int]:
-    args = ["edit", target]
-    if apply:
-        args.append("--apply")
-    return await _run(args)
 
 
 async def apply(target: str) -> tuple[str, str, int]:
