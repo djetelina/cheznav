@@ -62,6 +62,18 @@ async def mock_externals():
     return {}
 
 
+async def mock_git_fetch():
+    return None
+
+
+async def mock_git_status_porcelain():
+    return []
+
+
+async def mock_git_ahead_behind():
+    return (0, 0)
+
+
 def patch_chezmoi(**overrides):
     """Patch chezmoi module with standard mocks. Override any with kwargs."""
     defaults = dict(
@@ -74,6 +86,9 @@ def patch_chezmoi(**overrides):
         source_path=mock_source_path,
         git_remote_url=mock_git_remote_url,
         externals=mock_externals,
+        git_fetch=mock_git_fetch,
+        git_status_porcelain=mock_git_status_porcelain,
+        git_ahead_behind=mock_git_ahead_behind,
     )
     defaults.update(overrides)
     return patch.multiple("cheznav.chezmoi", **defaults)

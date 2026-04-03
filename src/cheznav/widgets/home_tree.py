@@ -53,6 +53,7 @@ class HomeTree(DirectoryTree):
         self.managed_paths = set()
         self.managed_entries = {}
         self.diff_paths = set()
+        self.git_dirty_paths: set[Path] = set()
         self._auto_expanded: list = []
 
     @staticmethod
@@ -114,9 +115,12 @@ class HomeTree(DirectoryTree):
 
         if path and path.is_file() and path in self.managed_paths:
             has_diff = path in self.diff_paths
+            git_dirty = path in self.git_dirty_paths
             color = self._theme_color("warning") if has_diff else self._theme_color("success")
             label = Text()
             label.append(path.name, style=base_style + style + Style(color=color))
+            if git_dirty:
+                label.append(" 🔄")
             entry = self.managed_entries.get(path)
             if entry and entry.indicator_str:
                 label.append(f" {entry.indicator_str}")

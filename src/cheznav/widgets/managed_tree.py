@@ -49,6 +49,7 @@ class ManagedTree(Tree):
         self.guide_depth = 4
         self.show_guides = True
         self.diff_paths: set[str] = set()
+        self.git_dirty_paths: set[str] = set()
         self._auto_expanded: list = []
 
     def _theme_color(self, name: str) -> str:
@@ -97,41 +98,51 @@ class ManagedTree(Tree):
                 if key in expanded_keys:
                     node.expand()
 
-    def mark_diffs(self, diff_paths: set[str]) -> None:
-        """Update diff_paths and rebuild labels to show diff indicators."""
+    def mark_diffs(self, diff_paths: set[str], git_dirty_paths: set[str] | None = None) -> None:
+        """Update diff/git-dirty paths and rebuild labels."""
         self.diff_paths = diff_paths
-        self._update_diff_labels(self.root)
+        self.git_dirty_paths = git_dirty_paths or set()
+        self._update_labels(self.root)
         self._update_external_diff_counts(diff_paths)
 
-    def _update_diff_labels(self, node) -> int:
-        """Update labels and return count of diffs under this node."""
+    def _update_labels(self, node) -> tuple[int, int]:
+        """Update labels and return (diff_count, git_dirty_count) under this node."""
         total_diffs = 0
+        total_dirty = 0
         for child in node.children:
             if isinstance(child.data, ManagedEntry):
                 has_diff = child.data.target_relative in self.diff_paths
+                git_dirty = child.data.target_relative in self.git_dirty_paths
                 child.set_label(
                     self._make_label(
                         PurePosixPath(child.data.target_relative).name,
                         child.data,
                         has_diff,
+                        git_dirty,
                     )
                 )
                 if has_diff:
                     total_diffs += 1
+                if git_dirty:
+                    total_dirty += 1
             elif isinstance(child.data, str) and child.children:
-                # Directory node — recurse and update label with count
-                child_diffs = self._update_diff_labels(child)
+                child_diffs, child_dirty = self._update_labels(child)
                 total_diffs += child_diffs
+                total_dirty += child_dirty
                 dirname = child.data.rsplit("/", 1)[-1] if "/" in child.data else child.data
                 label = Text()
                 label.append(dirname, style="bold cyan")
                 label.append("/", style="dim cyan")
                 if child_diffs > 0:
                     label.append(f" ({child_diffs})", style=f"bold {self._theme_color('warning')}")
+                if child_dirty > 0:
+                    label.append(f" ({child_dirty} dirty)", style=f"bold {self._theme_color('accent')}")
                 child.set_label(label)
             elif child.children:
-                total_diffs += self._update_diff_labels(child)
-        return total_diffs
+                cd, cg = self._update_labels(child)
+                total_diffs += cd
+                total_dirty += cg
+        return total_diffs, total_dirty
 
     def _update_external_diff_counts(self, diff_paths: set[str]) -> None:
         """Update external node labels with diff counts."""
@@ -215,7 +226,8 @@ class ManagedTree(Tree):
         for entry in files:
             name = PurePosixPath(entry.target_relative).name
             has_diff = entry.target_relative in self.diff_paths
-            label = self._make_label(name, entry, has_diff)
+            git_dirty = entry.target_relative in self.git_dirty_paths
+            label = self._make_label(name, entry, has_diff, git_dirty)
             parent_node.add_leaf(label, data=entry)
 
     def set_mirror(self, target_absolute: Path | None) -> None:
@@ -253,12 +265,14 @@ class ManagedTree(Tree):
 
         self.select_node(node)
 
-    def _make_label(self, name: str, entry: ManagedEntry, has_diff: bool = False) -> Text:
+    def _make_label(self, name: str, entry: ManagedEntry, has_diff: bool = False, git_dirty: bool = False) -> Text:
         label = Text()
         if has_diff:
             label.append(name, style=self._theme_color("warning"))
         else:
             label.append(name)
+        if git_dirty:
+            label.append(" 🔄", style=self._theme_color("accent"))
         if entry.indicator_str:
             label.append(f" {entry.indicator_str}")
         return label

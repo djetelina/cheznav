@@ -46,6 +46,9 @@ class _RefreshData(NamedTuple):
     metas: list[Path]
     status_entries: list[tuple[str, str, str]]
     remote: str
+    git_dirty: list[tuple[str, str]]
+    git_ahead: int
+    git_behind: int
 
 
 class CheznavApp(App):
@@ -130,17 +133,36 @@ class CheznavApp(App):
         home_tree.managed_paths = {e.target_absolute for e in data.entries}
         home_tree.managed_entries = {e.target_absolute: e for e in data.entries}
         home_tree.diff_paths = {Path.home() / path for _, _, path in data.status_entries}
-        managed_tree.mark_diffs({path for _, _, path in data.status_entries})
 
-        self.query_one(Header).update_info(data.remote)
+        # Map git dirty source-relative paths to target-relative paths
+        source_to_target = {e.source_relative: e.target_relative for e in data.entries}
+        git_dirty_target_paths = set()
+        for _code, src_path in data.git_dirty:
+            target = source_to_target.get(src_path)
+            if target:
+                git_dirty_target_paths.add(target)
+        managed_tree.mark_diffs(
+            {path for _, _, path in data.status_entries},
+            git_dirty_paths=git_dirty_target_paths,
+        )
+        home_tree.git_dirty_paths = {Path.home() / t for t in git_dirty_target_paths}
+
+        self.query_one(Header).update_info(
+            data.remote,
+            uncommitted=len(data.git_dirty),
+            ahead=data.git_ahead,
+            behind=data.git_behind,
+        )
 
     async def _fetch_refresh_data(self) -> _RefreshData:
-        entries, ext_config, metas, status_entries, remote = await asyncio.gather(
+        entries, ext_config, metas, status_entries, remote, git_dirty, git_ab = await asyncio.gather(
             chezmoi.managed(),
             chezmoi.externals(),
             chezmoi.metafiles(),
             chezmoi.status(),
             chezmoi.git_remote_url(),
+            chezmoi.git_status_porcelain(),
+            chezmoi.git_ahead_behind(),
         )
         managed_entries, external_entries = self._partition_entries(entries, ext_config)
         return _RefreshData(
@@ -151,9 +173,13 @@ class CheznavApp(App):
             metas=metas,
             status_entries=status_entries,
             remote=remote,
+            git_dirty=git_dirty,
+            git_ahead=git_ab[0],
+            git_behind=git_ab[1],
         )
 
     async def on_ready(self) -> None:
+        self._git_fetch_task = asyncio.create_task(self._fetch_and_refresh_ahead_behind())
         data = await self._fetch_refresh_data()
         await self._update_trees(data)
 
@@ -391,6 +417,11 @@ class CheznavApp(App):
 
     def action_help(self) -> None:
         self.push_screen(HelpScreen())
+
+    async def _fetch_and_refresh_ahead_behind(self) -> None:
+        """Run git fetch, then refresh to pick up accurate ahead/behind counts."""
+        await chezmoi.git_fetch()
+        await self._refresh_managed()
 
     async def _refresh_managed(self) -> None:
         data = await self._fetch_refresh_data()
