@@ -2,7 +2,12 @@
 
 # cheznav
 
-A TUI for [chezmoi](https://www.chezmoi.io/) built with [Textual](https://textual.textualize.io/).
+[![PyPI - Version](https://img.shields.io/pypi/v/cheznav)](https://pypi.org/project/cheznav/)
+[![AUR - Version](https://img.shields.io/aur/version/cheznav)](https://aur.archlinux.org/packages/cheznav)
+![PyPI - License](https://img.shields.io/pypi/l/cheznav)
+![GitHub Repo stars](https://img.shields.io/github/stars/DJetelina/cheznav?style=flat&logo=github)
+
+A TUI for [chezmoi](https://www.chezmoi.io/).
 
 Dual-pane layout: local home directory on the left, chezmoi-managed files on the right.
 Cross-tree highlighting keeps selection in sync between panes.

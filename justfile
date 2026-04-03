@@ -1,7 +1,7 @@
 set shell := ["bash", "-cu"]
 
 init:
-	uv run pre-commit install
+	uv run prek install
 	uv sync
 
 test:
@@ -14,4 +14,4 @@ run:
 	uv run cheznav
 
 check:
-	uv run pre-commit run --all-files
+	uv run prek run --all-files
