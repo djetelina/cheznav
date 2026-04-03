@@ -205,23 +205,27 @@ async def add_ignore(pattern: str) -> None:
     await asyncio.to_thread(_write)
 
 
-async def git_remote_url() -> str:
-    """Return the chezmoi repo's git remote URL, or empty string."""
+async def _run_git(args: list[str]) -> tuple[str, str, int]:
+    """Run a git command via chezmoi git -- <args>."""
     proc = await asyncio.create_subprocess_exec(
         "chezmoi",
         "git",
         "--",
-        "remote",
-        "get-url",
-        "origin",
+        *args,
         stdin=asyncio.subprocess.DEVNULL,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
-    stdout, _ = await proc.communicate()
-    if proc.returncode != 0:
+    stdout, stderr = await proc.communicate()
+    return stdout.decode(), stderr.decode(), proc.returncode
+
+
+async def git_remote_url() -> str:
+    """Return the chezmoi repo's git remote URL, or empty string."""
+    stdout, _, rc = await _run_git(["remote", "get-url", "origin"])
+    if rc != 0:
         return ""
-    url = stdout.decode().strip().removesuffix(".git")
+    url = stdout.strip().removesuffix(".git")
     for prefix in ("https://github.com/", "git@github.com:"):
         if url.startswith(prefix):
             return url.removeprefix(prefix)
@@ -234,6 +238,44 @@ async def dump_config() -> tuple[str, str, int]:
 
 async def doctor() -> tuple[str, str, int]:
     return await _run(["doctor"])
+
+
+async def git_fetch() -> None:
+    """Run git fetch origin in the source directory. Errors are logged, not raised."""
+    _, stderr, rc = await _run_git(["fetch", "origin"])
+    if rc != 0:
+        log.warning("git fetch failed: %s", stderr.strip())
+
+
+async def git_status_porcelain() -> list[tuple[str, str]]:
+    """Return (status_code, path) for dirty files in the source directory."""
+    stdout, _, rc = await _run_git(["status", "--porcelain"])
+    if rc != 0:
+        return []
+    results = []
+    for line in stdout.splitlines():
+        if len(line) >= 4:  # noqa: PLR2004
+            code = line[:2].strip()
+            path = line[3:]
+            # Renames: "R  old -> new" — use the destination
+            if " -> " in path:
+                path = path.split(" -> ", 1)[1]
+            results.append((code, path))
+    return results
+
+
+async def git_ahead_behind() -> tuple[int, int]:
+    """Return (ahead, behind) commit counts relative to upstream."""
+    stdout, _, rc = await _run_git(["rev-list", "--left-right", "--count", "HEAD...@{u}"])
+    if rc != 0:
+        return (0, 0)
+    parts = stdout.strip().split()
+    if len(parts) != 2:  # noqa: PLR2004
+        return (0, 0)
+    try:
+        return (int(parts[0]), int(parts[1]))
+    except ValueError:
+        return (0, 0)
 
 
 async def status() -> list[tuple[str, str, str]]:

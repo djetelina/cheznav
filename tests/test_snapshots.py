@@ -56,7 +56,10 @@ def _make_entries(home: Path):
 STATUS_ENTRIES = [(" ", "M", ".bashrc"), (" ", "M", ".config/nvim/init.lua")]
 
 
-def _patch_all(home: Path):
+GIT_DIRTY_ENTRIES = [("M", "dot_.bashrc"), ("M", "dot_.zshrc")]
+
+
+def _patch_all(home: Path, git_dirty=None, git_ahead_behind=(0, 0)):
     entries = _make_entries(home)
 
     async def mock_managed():
@@ -80,6 +83,17 @@ def _patch_all(home: Path):
     async def mock_externals():
         return {}
 
+    async def mock_git_fetch():
+        return None
+
+    async def mock_git_status_porcelain():
+        return git_dirty if git_dirty is not None else []
+
+    _git_ab = git_ahead_behind
+
+    async def mock_git_ahead_behind():
+        return _git_ab
+
     return patch.multiple(
         "cheznav.chezmoi",
         managed=mock_managed,
@@ -89,21 +103,28 @@ def _patch_all(home: Path):
         source_path=mock_source_path,
         git_remote_url=mock_git_remote_url,
         externals=mock_externals,
+        git_fetch=mock_git_fetch,
+        git_status_porcelain=mock_git_status_porcelain,
+        git_ahead_behind=mock_git_ahead_behind,
     )
 
 
-def _ctx(home: Path):
+def _ctx(home: Path, **patch_kwargs):
     """Combined context manager for all patches."""
 
     class _Ctx:
         def __enter__(self):
-            self._p1 = _patch_all(home)
+            self._p1 = _patch_all(home, **patch_kwargs)
             self._p2 = patch("cheznav.widgets.home_tree.Path.home", return_value=home)
+            # Disable syntax highlighting to avoid Pygments rendering differences across environments
+            self._p3 = patch("cheznav.widgets.content._make_syntax", side_effect=lambda c, lang=None: c)
             self._p1.__enter__()
             self._p2.__enter__()
+            self._p3.__enter__()
             return self
 
         def __exit__(self, *args):
+            self._p3.__exit__(*args)
             self._p2.__exit__(*args)
             self._p1.__exit__(*args)
 
@@ -215,3 +236,21 @@ def test_diff_context_menu(snap_compare, mock_home):
             terminal_size=(120, 40),
             press=["right", "down", "enter", "d"],
         )
+
+
+def test_git_dirty_indicators(snap_compare, mock_home):
+    """Show 🔄 markers on files with uncommitted source changes."""
+    with _ctx(mock_home, git_dirty=GIT_DIRTY_ENTRIES):
+        assert snap_compare(CheznavApp(dry_run=True), terminal_size=(120, 40), press=["right"])
+
+
+def test_git_uncommitted_header(snap_compare, mock_home):
+    """Header shows uncommitted count."""
+    with _ctx(mock_home, git_dirty=GIT_DIRTY_ENTRIES):
+        assert snap_compare(CheznavApp(dry_run=True), terminal_size=(120, 40))
+
+
+def test_git_ahead_behind_header(snap_compare, mock_home):
+    """Header shows ahead/behind counts."""
+    with _ctx(mock_home, git_ahead_behind=(3, 1)):
+        assert snap_compare(CheznavApp(dry_run=True), terminal_size=(120, 40))

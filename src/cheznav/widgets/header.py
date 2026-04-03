@@ -62,6 +62,7 @@ class StatusBar(Container):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._remote_label = Label("")
+        self._git_status_label = Label("")
 
     def compose(self) -> ComposeResult:
         with Container(id="status-inner"):
@@ -69,17 +70,36 @@ class StatusBar(Container):
                 yield Label("\\[ ")
                 yield self._remote_label
                 yield Label(" ]")
+                yield self._git_status_label
             with Container(id="status-links"):
                 yield Link("GitHub", url="https://github.com/djetelina/cheznav")
                 yield Link("Changelog", url="https://github.com/djetelina/cheznav/blob/main/CHANGELOG.md")
 
-    def update_info(self, remote: str, **_) -> None:
+    def update_info(
+        self,
+        remote: str,
+        uncommitted: int = 0,
+        ahead: int = 0,
+        behind: int = 0,
+        **_,
+    ) -> None:
         self._remote_label.update(remote or "no remote")
+        parts = []
+        if uncommitted > 0:
+            parts.append(f"[$warning]{uncommitted} uncommitted[/]")
+        if ahead > 0:
+            parts.append(f"[$accent]{ahead} ahead[/]")
+        if behind > 0:
+            parts.append(f"[$error]{behind} behind[/]")
+        if parts:
+            self._git_status_label.update(" \\[ " + ", ".join(parts) + " ]")
+        else:
+            self._git_status_label.update("")
 
 
 class Legend(Label):
     def __init__(self, **kwargs) -> None:
-        super().__init__("[$success]managed[/]  [$warning]diff[/]  🔒 encrypted  📝 template  ⚡ executable", **kwargs)
+        super().__init__("[$success]managed[/]  [$warning]diff[/]  🔄 uncommitted  🔒 encrypted  📝 template  ⚡ executable", **kwargs)
 
 
 class Header(Container):
@@ -95,8 +115,8 @@ class Header(Container):
         super().__init__(*args, **kwargs)
         self._status_bar = StatusBar()
 
-    def update_info(self, remote: str, **_) -> None:
-        self._status_bar.update_info(remote)
+    def update_info(self, remote: str, **kwargs) -> None:
+        self._status_bar.update_info(remote, **kwargs)
 
     def compose(self) -> ComposeResult:
         yield self._status_bar

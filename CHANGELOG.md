@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Git status indicators: header shows uncommitted/ahead/behind counts, files with uncommitted source changes marked with 🔄
+- Non-blocking git fetch on startup for accurate ahead/behind tracking
+
 ## [0.1.0] - 2026-04-02
 
 ### Added
