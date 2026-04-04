@@ -4,6 +4,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/cheznav)](https://pypi.org/project/cheznav/)
 [![AUR - Version](https://img.shields.io/aur/version/cheznav)](https://aur.archlinux.org/packages/cheznav)
+[![Homebrew](https://img.shields.io/github/v/release/djetelina/homebrew-tap?filter=cheznav-*&label=brew)](https://github.com/djetelina/homebrew-tap)
 ![PyPI - License](https://img.shields.io/pypi/l/cheznav)
 ![GitHub Repo stars](https://img.shields.io/github/stars/DJetelina/cheznav?style=flat&logo=github)
 
