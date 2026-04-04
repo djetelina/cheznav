@@ -25,6 +25,9 @@ Supports encrypted files, templates, executables, symlinks, directories, externa
 ```bash
 pipx install cheznav
 
+# or with Homebrew
+brew install djetelina/tap/cheznav
+
 # or from AUR
 yay -S cheznav
 ```
