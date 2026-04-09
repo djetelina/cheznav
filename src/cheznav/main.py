@@ -16,14 +16,13 @@ from textual.widgets import DirectoryTree, Footer, Tab, Tabs, Tree
 
 from cheznav import THEME, chezmoi
 from cheznav.chezmoi import ManagedEntry
-from cheznav.utils import detect_language, is_binary, is_binary_content
+from cheznav.utils import is_binary, is_binary_content
 from cheznav.widgets import (
     ActionMenu,
     AddFlagsScreen,
     ChattrScreen,
     CommandPalette,
     ConfirmScreen,
-    ContentView,
     Header,
     HelpScreen,
     HomeTree,
@@ -67,15 +66,12 @@ class CheznavApp(App):
         Binding("i", "shortcut_i", "", show=False),
         Binding("x", "shortcut_x", "", show=False),
         # Global
-        Binding("escape", "close_overlay", "", show=False),
         Binding("question_mark", "help", "Help"),
         Binding("q", "quit", "Quit"),
     ]
 
     def __init__(self, *, dry_run: bool = False, **kwargs) -> None:
         self.dry_run = dry_run
-        self._view_active = False
-        self._view_previous_focus = None
         self._refreshing = False
         if dry_run:
             chezmoi.set_dry_run(True)
@@ -219,13 +215,6 @@ class CheznavApp(App):
         path = self._get_home_selected_path()
         return path is not None and path in self.query_one(HomeTree).managed_paths
 
-    _VIEW_ALLOWED_ACTIONS = frozenset({"close_overlay", "help", "quit"})
-
-    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
-        if self._view_active:
-            return action in self._VIEW_ALLOWED_ACTIONS
-        return True
-
     def action_switch_pane_left(self) -> None:
         if self.query_one(ManagedTree).has_focus:
             self.query_one(HomeTree).focus()
@@ -331,7 +320,7 @@ class CheznavApp(App):
             content = json.dumps(parsed, indent=2)
         except json.JSONDecodeError:
             pass
-        await self._show_content("Template Data", content, language="json")
+        self._show_content(content)
 
     async def action_cmd_dump_config(self) -> None:
         stdout, stderr, rc = await chezmoi.dump_config()
@@ -339,24 +328,21 @@ class CheznavApp(App):
         if not content.strip():
             self.notify("No config data", severity="warning")
             return
-        await self._show_content("Chezmoi Config", content, language="json")
+        self._show_content(content)
 
     async def action_preview_template(self) -> None:
         """Preview a template file rendered with current machine data."""
         source_path = None
-        title = None
 
         entry = self._get_managed_selected_entry()
         if entry and entry.is_template:
             source_path = str(entry.source_absolute)
-            title = entry.target_relative
         else:
             # Check for metafile
             managed = self.query_one(ManagedTree)
             node = managed.cursor_node
             if node and isinstance(node.data, Path) and node.data.name.endswith(".tmpl"):
                 source_path = str(node.data)
-                title = node.data.name
 
         if source_path is None:
             self.notify("Select a template file", severity="warning")
@@ -369,8 +355,7 @@ class CheznavApp(App):
         if not content.strip():
             self.notify("Template produced empty output", severity="warning")
             return
-        lang = detect_language(title)
-        await self._show_content(f"Preview: {title}", content, language=lang)
+        self._show_content(content)
 
     async def action_cmd_doctor(self) -> None:
         stdout, stderr, _rc = await chezmoi.doctor()
@@ -378,7 +363,7 @@ class CheznavApp(App):
         if not content:
             self.notify("No output from doctor", severity="warning")
             return
-        await self._show_content("Chezmoi Doctor", content)
+        self._show_content(content)
 
     def action_help(self) -> None:
         self.push_screen(HelpScreen())
@@ -482,28 +467,18 @@ class CheznavApp(App):
         elif self._managed_focused():
             await self._view_managed_file()
 
-    async def _show_content(self, title: str, content: str, language: str | None = None) -> None:
-        """Show content inline, replacing both panes."""
-        self._view_previous_focus = self.focused
-        self.query_one("#pane-container").display = False
-        view = ContentView(title, content, language=language, id="content-view")
-        await self.mount(view, after=self.query_one("#pane-tabs"))
-        self._view_active = True
-        self.refresh_bindings()
+    def _show_file(self, path: Path) -> None:
+        """Open a file in $PAGER (falls back to 'less')."""
+        pager = os.environ.get("PAGER", "less")
+        with self.suspend():
+            subprocess.run(f"{pager} {path}", shell=True, check=False)
 
-    async def _close_view(self) -> None:
-        views = self.query("#content-view")
-        for v in views:
-            await v.remove()
-        self.query_one("#pane-container").display = True
-        self._view_active = False
-        self.refresh_bindings()
-        if self._view_previous_focus:
-            self._view_previous_focus.focus()
-
-    async def action_close_overlay(self) -> None:
-        if self._view_active:
-            await self._close_view()
+    def _show_content(self, content: str) -> None:
+        """Pipe content into $PAGER (falls back to 'less')."""
+        pager = os.environ.get("PAGER", "less")
+        with self.suspend():
+            proc = subprocess.Popen(pager, shell=True, stdin=subprocess.PIPE)
+            proc.communicate(input=content.encode())
 
     async def _view_home_file(self) -> None:
         path = self._get_home_selected_path()
@@ -512,48 +487,29 @@ class CheznavApp(App):
         if is_binary(path.name) or await asyncio.to_thread(is_binary_content, path):
             self.notify("Cannot view binary file", severity="warning")
             return
-        try:
-            content = path.read_text(errors="replace")
-        except Exception as exc:
-            self.notify(f"Cannot read file: {exc}", severity="error")
-            return
-        lang = detect_language(path.name)
-        await self._show_content(str(path), content, language=lang)
+        self._show_file(path)
 
     async def _view_managed_file(self) -> None:
         managed = self.query_one(ManagedTree)
         node = managed.cursor_node
         if node and isinstance(node.data, Path):
-            try:
-                content = node.data.read_text(errors="replace")
-            except Exception as exc:
-                self.notify(f"Cannot read file: {exc}", severity="error")
-                return
-            lang = detect_language(node.data.name)
-            await self._show_content(node.data.name, content, language=lang)
+            self._show_file(node.data)
             return
         entry = self._get_managed_selected_entry()
         if entry is None:
             return
         if entry.is_template:
-            title = f"{entry.target_relative} (template source)"
-            try:
-                content = entry.source_absolute.read_text(errors="replace")
-            except Exception as exc:
-                self.notify(f"Cannot read template: {exc}", severity="error")
-                return
+            self._show_file(entry.source_absolute)
         else:
-            title = entry.target_relative
             try:
                 content = await chezmoi.cat(str(entry.target_absolute))
             except chezmoi.ChezmoiError as exc:
                 self.notify(f"Cannot read file: {exc}", severity="error")
                 return
-        if not content.strip():
-            self.notify("No content (file may be encrypted or empty)", severity="warning")
-            return
-        lang = detect_language(entry.target_relative)
-        await self._show_content(title, content, language=lang)
+            if not content.strip():
+                self.notify("No content (file may be encrypted or empty)", severity="warning")
+                return
+            self._show_content(content)
 
     # --- Home pane actions ---
 

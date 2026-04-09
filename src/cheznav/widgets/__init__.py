@@ -1,6 +1,5 @@
 from cheznav.widgets.action_menu import ActionMenu, CommandPalette
 from cheznav.widgets.confirm import AddFlagsScreen, ChattrScreen, ConfirmScreen
-from cheznav.widgets.content import ContentView
 from cheznav.widgets.header import Header, Legend
 from cheznav.widgets.help import HelpScreen
 from cheznav.widgets.home_tree import HomeTree
@@ -12,7 +11,6 @@ __all__ = [
     "ChattrScreen",
     "CommandPalette",
     "ConfirmScreen",
-    "ContentView",
     "Header",
     "HelpScreen",
     "HomeTree",

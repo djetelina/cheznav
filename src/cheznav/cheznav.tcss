@@ -51,10 +51,6 @@ HomeTree:focus, ManagedTree:focus {
     scrollbar-color: $primary;
 }
 
-#content-view {
-    height: 1fr;
-}
-
 #bottom-bar {
     dock: bottom;
     height: auto;

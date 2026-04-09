@@ -1,8 +1,5 @@
 from pathlib import Path
 
-from pygments.lexers import guess_lexer_for_filename
-from pygments.util import ClassNotFound
-
 BINARY_EXTENSIONS = frozenset(
     {
         ".png",
@@ -69,17 +66,3 @@ def is_binary_content(path: Path) -> bool:
     except UnicodeDecodeError:
         return True
     return False
-
-
-def detect_language(filename: str) -> str | None:
-    path = Path(filename)
-    # Iteratively strip .tmpl suffixes to find the real extension
-    for _ in range(5):
-        if path.suffix != ".tmpl":
-            break
-        path = Path(path.stem)
-    try:
-        lexer = guess_lexer_for_filename(path.name, "")
-        return lexer.aliases[0] if lexer.aliases else None
-    except ClassNotFound:
-        return None

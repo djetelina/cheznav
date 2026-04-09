@@ -116,15 +116,11 @@ def _ctx(home: Path, **patch_kwargs):
         def __enter__(self):
             self._p1 = _patch_all(home, **patch_kwargs)
             self._p2 = patch("cheznav.widgets.home_tree.Path.home", return_value=home)
-            # Disable syntax highlighting to avoid Pygments rendering differences across environments
-            self._p3 = patch("cheznav.widgets.content._make_syntax", side_effect=lambda c, lang=None: c)
             self._p1.__enter__()
             self._p2.__enter__()
-            self._p3.__enter__()
             return self
 
         def __exit__(self, *args):
-            self._p3.__exit__(*args)
             self._p2.__exit__(*args)
             self._p1.__exit__(*args)
 
@@ -164,47 +160,6 @@ def test_help_screen(snap_compare, mock_home):
 def test_add_flags(snap_compare, mock_home):
     with _ctx(mock_home):
         assert snap_compare(CheznavApp(dry_run=True), terminal_size=(120, 40), press=["down", "a"])
-
-
-def test_view_home_shortcut(snap_compare, mock_home):
-    """View a home file with 'v' shortcut."""
-    with _ctx(mock_home):
-        # .bashrc is 4 downs (past .config/, .local/, Documents/, Downloads/)
-        assert snap_compare(
-            CheznavApp(dry_run=True),
-            terminal_size=(120, 40),
-            press=["down", "down", "down", "down", "v"],
-        )
-
-
-def test_view_home_context_menu(snap_compare, mock_home):
-    """View a home file via context menu."""
-    with _ctx(mock_home):
-        assert snap_compare(
-            CheznavApp(dry_run=True),
-            terminal_size=(120, 40),
-            press=["down", "down", "down", "down", "enter", "v"],
-        )
-
-
-def test_view_managed_shortcut(snap_compare, mock_home):
-    """View a managed file with 'v' shortcut."""
-    with _ctx(mock_home):
-        assert snap_compare(
-            CheznavApp(dry_run=True),
-            terminal_size=(120, 40),
-            press=["right", "down", "v"],
-        )
-
-
-def test_view_managed_context_menu(snap_compare, mock_home):
-    """View a managed file via context menu."""
-    with _ctx(mock_home):
-        assert snap_compare(
-            CheznavApp(dry_run=True),
-            terminal_size=(120, 40),
-            press=["right", "down", "enter", "v"],
-        )
 
 
 def test_managed_expand_dir(snap_compare, mock_home):

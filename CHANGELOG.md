@@ -15,11 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Diff view replaced with external `chezmoi diff` (respects chezmoi's `diff.command` and `diff.pager` config)
+- File/content viewing now uses `$PAGER` (falls back to `less`) instead of built-in viewer
 
 ### Removed
 
 - Built-in side-by-side diff viewer
 - Accept left/right actions from diff view
+- Built-in content viewer (syntax-highlighted inline view)
 
 ## [0.1.1] - 2026-04-07
 
