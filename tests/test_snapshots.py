@@ -217,27 +217,6 @@ def test_managed_expand_dir(snap_compare, mock_home):
         )
 
 
-def test_diff_shortcut(snap_compare, mock_home):
-    """Open diff with 'd' shortcut on managed pane."""
-    with _ctx(mock_home):
-        # .bashrc has a diff — down once from .config/ dir
-        assert snap_compare(
-            CheznavApp(dry_run=True),
-            terminal_size=(120, 40),
-            press=["right", "down", "d"],
-        )
-
-
-def test_diff_context_menu(snap_compare, mock_home):
-    """Open diff via context menu."""
-    with _ctx(mock_home):
-        assert snap_compare(
-            CheznavApp(dry_run=True),
-            terminal_size=(120, 40),
-            press=["right", "down", "enter", "d"],
-        )
-
-
 def test_git_dirty_indicators(snap_compare, mock_home):
     """Show 🔄 markers on files with uncommitted source changes."""
     with _ctx(mock_home, git_dirty=GIT_DIRTY_ENTRIES):

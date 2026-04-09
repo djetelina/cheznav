@@ -12,6 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Git status indicators: header shows uncommitted/ahead/behind counts, files with uncommitted source changes marked with 🔄
 - Non-blocking git fetch on startup for accurate ahead/behind tracking
 
+### Changed
+
+- Diff view replaced with external `chezmoi diff` (respects chezmoi's `diff.command` and `diff.pager` config)
+
+### Removed
+
+- Built-in side-by-side diff viewer
+- Accept left/right actions from diff view
+
+## [0.1.1] - 2026-04-07
+
+### Changed
+
+- Remove dead code, unused imports, and unnecessary dependency
+
 ## [0.1.0] - 2026-04-02
 
 ### Added

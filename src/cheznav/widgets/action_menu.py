@@ -224,13 +224,3 @@ def build_managed_actions(node_data, has_diff: bool, is_expanded: bool = False) 
         return f"{dirname}/", actions
 
     return "Nothing selected", []
-
-
-def build_diff_actions(target: str) -> tuple[str, list[ActionItem]]:
-    """Build action list for diff view."""
-    name = Path(target).name if target else "Diff"
-    return name, [
-        ActionItem("Keep disk (re-add)", "diff_accept_left", "a"),
-        ActionItem("Use chezmoi version (apply)", "diff_accept_right", "r"),
-        ActionItem("Close diff", "diff_close"),
-    ]

@@ -51,10 +51,6 @@ HomeTree:focus, ManagedTree:focus {
     scrollbar-color: $primary;
 }
 
-#diff-view {
-    height: 1fr;
-}
-
 #content-view {
     height: 1fr;
 }

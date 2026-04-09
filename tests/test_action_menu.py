@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from cheznav.widgets.action_menu import build_diff_actions, build_home_actions, build_managed_actions
+from cheznav.widgets.action_menu import build_home_actions, build_managed_actions
 from cheznav.widgets.managed_tree import ExternalRoot
 from tests.conftest import make_entry
 
@@ -80,13 +80,3 @@ class TestBuildManagedActions:
     def test_nothing_selected(self):
         _title, actions = build_managed_actions(None, has_diff=False)
         assert actions == []
-
-
-class TestBuildDiffActions:
-    def test_diff_actions(self):
-        title, actions = build_diff_actions("/home/user/.bashrc")
-        action_names = [a.action for a in actions]
-        assert "diff_accept_left" in action_names
-        assert "diff_accept_right" in action_names
-        assert "diff_close" in action_names
-        assert title == ".bashrc"

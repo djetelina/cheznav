@@ -24,14 +24,13 @@ from cheznav.widgets import (
     CommandPalette,
     ConfirmScreen,
     ContentView,
-    DiffView,
     Header,
     HelpScreen,
     HomeTree,
     Legend,
     ManagedTree,
 )
-from cheznav.widgets.action_menu import build_diff_actions, build_home_actions, build_managed_actions
+from cheznav.widgets.action_menu import build_home_actions, build_managed_actions
 
 log = logging.getLogger(__name__)
 
@@ -67,7 +66,6 @@ class CheznavApp(App):
         Binding("d", "shortcut_d", "", show=False),
         Binding("i", "shortcut_i", "", show=False),
         Binding("x", "shortcut_x", "", show=False),
-        Binding("r", "shortcut_r", "", show=False),
         # Global
         Binding("escape", "close_overlay", "", show=False),
         Binding("question_mark", "help", "Help"),
@@ -76,9 +74,6 @@ class CheznavApp(App):
 
     def __init__(self, *, dry_run: bool = False, **kwargs) -> None:
         self.dry_run = dry_run
-        self._diff_active = False
-        self._diff_target = ""
-        self._diff_previous_focus = None
         self._view_active = False
         self._view_previous_focus = None
         self._refreshing = False
@@ -224,55 +219,25 @@ class CheznavApp(App):
         path = self._get_home_selected_path()
         return path is not None and path in self.query_one(HomeTree).managed_paths
 
-    _DIFF_ALLOWED_ACTIONS = frozenset(
-        {
-            "help",
-            "quit",
-            "switch_pane_left",
-            "switch_pane_right",
-            "open_actions",
-            "close_overlay",
-            "shortcut_a",
-            "shortcut_r",
-        }
-    )
     _VIEW_ALLOWED_ACTIONS = frozenset({"close_overlay", "help", "quit"})
 
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
-        if self._diff_active:
-            return action.startswith("diff_") or action in self._DIFF_ALLOWED_ACTIONS
         if self._view_active:
             return action in self._VIEW_ALLOWED_ACTIONS
-        return not action.startswith("diff_")
+        return True
 
     def action_switch_pane_left(self) -> None:
-        if self._diff_active:
-            from cheznav.widgets.diff import DiffScroll  # noqa: PLC0415
-
-            scrolls = list(self.query(DiffScroll))
-            if len(scrolls) == 2 and scrolls[1].has_focus:  # noqa: PLR2004
-                scrolls[0].focus()
-            return
         if self.query_one(ManagedTree).has_focus:
             self.query_one(HomeTree).focus()
             self.refresh_bindings()
 
     def action_switch_pane_right(self) -> None:
-        if self._diff_active:
-            from cheznav.widgets.diff import DiffScroll  # noqa: PLC0415
-
-            scrolls = list(self.query(DiffScroll))
-            if len(scrolls) == 2 and scrolls[0].has_focus:  # noqa: PLR2004
-                scrolls[1].focus()
-            return
         if self.query_one(HomeTree).has_focus:
             self.query_one(ManagedTree).focus()
             self.refresh_bindings()
 
     def action_open_actions(self) -> None:
-        if self._diff_active:
-            title, actions = build_diff_actions(self._diff_target)
-        elif self._home_focused():
+        if self._home_focused():
             home = self.query_one(HomeTree)
             node = home.cursor_node
             path = node.data.path if node and node.data else None
@@ -313,9 +278,7 @@ class CheznavApp(App):
     # --- Direct keyboard shortcuts (context-aware, no menu needed) ---
 
     async def action_shortcut_a(self) -> None:
-        if self._diff_active:
-            await self.run_action("diff_accept_left")
-        elif self._home_focused():
+        if self._home_focused():
             path = self._get_home_cursor_path()
             if path and path.is_file() and self._home_managed_file_selected():
                 await self.run_action("home_re_add")
@@ -332,7 +295,13 @@ class CheznavApp(App):
             await self.run_action("managed_edit")
 
     async def action_shortcut_d(self) -> None:
-        if self._managed_focused() or self._home_managed_file_selected():
+        entry = self._resolve_entry()
+        if entry is None:
+            return
+        if self._managed_focused():
+            if entry.target_relative in self.query_one(ManagedTree).diff_paths:
+                await self.run_action("managed_diff")
+        elif self._home_managed_file_selected():
             await self.run_action("managed_diff")
 
     async def action_shortcut_i(self) -> None:
@@ -342,10 +311,6 @@ class CheznavApp(App):
     async def action_shortcut_x(self) -> None:
         if self._managed_focused() or self._home_managed_file_selected():
             await self.run_action("managed_forget")
-
-    async def action_shortcut_r(self) -> None:
-        if self._diff_active:
-            await self.run_action("diff_accept_right")
 
     async def action_cmd_update(self) -> None:
         self.notify("Updating (pull + apply)...")
@@ -537,9 +502,7 @@ class CheznavApp(App):
             self._view_previous_focus.focus()
 
     async def action_close_overlay(self) -> None:
-        if self._diff_active:
-            await self._close_diff()
-        elif self._view_active:
+        if self._view_active:
             await self._close_view()
 
     async def _view_home_file(self) -> None:
@@ -670,73 +633,13 @@ class CheznavApp(App):
             return
         self._run_edit_path(entry.target_absolute)
 
-    async def action_managed_diff(self) -> None:
+    def action_managed_diff(self) -> None:
         entry = self._resolve_entry()
         if entry is None:
             self.notify("Select a managed file first", severity="warning")
             return
-        target = str(entry.target_absolute)
-        try:
-            left = await chezmoi.cat(target)
-        except chezmoi.ChezmoiError as exc:
-            self.notify(f"Cannot read chezmoi state: {exc}", severity="error")
-            return
-        try:
-            right = entry.target_absolute.read_text(errors="replace")
-        except FileNotFoundError:
-            right = ""
-        except OSError as exc:
-            self.notify(f"Cannot read local file: {exc}", severity="error")
-            return
-
-        self._diff_previous_focus = self.focused
-        self.query_one("#pane-container").display = False
-        diff_view = DiffView(entry.target_relative, left, right, id="diff-view")
-        await self.mount(diff_view, after=self.query_one("#pane-tabs"))
-        self._diff_active = True
-        self._diff_target = target
-        self.refresh_bindings()
-        from cheznav.widgets.diff import DiffScroll  # noqa: PLC0415
-
-        scrolls = diff_view.query(DiffScroll)
-        if scrolls:
-            scrolls.first().focus()
-
-    async def _close_diff(self) -> None:
-        diff_views = self.query("#diff-view")
-        for dv in diff_views:
-            await dv.remove()
-        self.query_one("#pane-container").display = True
-        self._diff_active = False
-        self._diff_target = ""
-        self.refresh_bindings()
-        if self._diff_previous_focus:
-            self._diff_previous_focus.focus()
-        else:
-            self.query_one(ManagedTree).focus()
-
-    async def action_diff_close(self) -> None:
-        await self._close_diff()
-
-    def action_diff_accept_left(self) -> None:
-        target = self._diff_target
-
-        async def on_confirm(confirmed: bool | None) -> None:
-            if confirmed:
-                await self._close_diff()
-                self._run_and_refresh(chezmoi.re_add(target))
-
-        self.push_screen(ConfirmScreen("Keep disk version (re-add)", f"chezmoi re-add {target}"), on_confirm)
-
-    def action_diff_accept_right(self) -> None:
-        target = self._diff_target
-
-        async def on_confirm(confirmed: bool | None) -> None:
-            if confirmed:
-                await self._close_diff()
-                self._run_and_refresh(chezmoi.apply(target))
-
-        self.push_screen(ConfirmScreen("Use chezmoi version (apply)", f"chezmoi apply {target}"), on_confirm)
+        with self.suspend():
+            subprocess.run(["chezmoi", "diff", str(entry.target_absolute)], check=False)
 
     async def action_home_re_add(self) -> None:
         path = self._get_home_selected_path()
