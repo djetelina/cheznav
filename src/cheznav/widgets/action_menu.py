@@ -210,6 +210,8 @@ def build_managed_actions(node_data, has_diff: bool, is_expanded: bool = False) 
         ]
         if node_data.name.endswith(".tmpl"):
             actions.append(ActionItem("Preview template", "preview_template"))
+        if node_data.name.startswith(".chezmoi.") and node_data.name.endswith(".tmpl"):
+            actions.append(ActionItem("Apply (chezmoi init)", "cmd_init"))
         actions.append(ActionItem("Change attributes", "managed_chattr"))
         return node_data.name, actions
 

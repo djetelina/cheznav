@@ -118,7 +118,8 @@ class CheznavApp(App):
         managed_tree = self.query_one(ManagedTree)
         await managed_tree.load_entries(data.managed_entries, restore_state=restore_state)
         managed_tree.load_externals(data.external_entries, data.ext_config)
-        managed_tree.load_metafiles(data.metas)
+        git_dirty_source_paths = {src for _, src in data.git_dirty}
+        managed_tree.load_metafiles(data.metas, git_dirty_source_paths=git_dirty_source_paths)
 
         home_tree = self.query_one(HomeTree)
         home_tree.managed_paths = {e.target_absolute for e in data.entries}
@@ -308,6 +309,15 @@ class CheznavApp(App):
             self.notify(f"Update failed: {stderr.strip()}", severity="error")
         else:
             self.notify("Update complete", severity="information")
+            await self._refresh_managed()
+
+    async def action_cmd_init(self) -> None:
+        self.notify("Running chezmoi init...")
+        _, stderr, rc = await chezmoi.init()
+        if rc != 0:
+            self.notify(f"Init failed: {stderr.strip()}", severity="error")
+        else:
+            self.notify("Init complete", severity="information")
             await self._refresh_managed()
 
     async def action_cmd_data(self) -> None:

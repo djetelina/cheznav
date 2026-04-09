@@ -194,13 +194,19 @@ class ManagedTree(Tree):
 
             section.add_leaf(label, data=ext_data)
 
-    def load_metafiles(self, metafiles: list[Path]) -> None:
+    def load_metafiles(self, metafiles: list[Path], git_dirty_source_paths: set[str] | None = None) -> None:
         if not metafiles:
             return
+        dirty = git_dirty_source_paths or set()
+        src_dir = metafiles[0].parent if metafiles else None
         config_node = self.root.add(Text("chezmoi config", style="bold magenta"), expand=False)
         for item in metafiles:
+            rel = str(item.relative_to(src_dir)) if src_dir else item.name
             if item.is_file():
-                config_node.add_leaf(Text(item.name), data=item)
+                label = Text(item.name)
+                if rel in dirty:
+                    label.append(" 🔄", style=self._theme_color("accent"))
+                config_node.add_leaf(label, data=item)
             elif item.is_dir():
                 dir_label = Text()
                 dir_label.append(item.name, style="bold cyan")
@@ -208,8 +214,11 @@ class ManagedTree(Tree):
                 dir_node = config_node.add(dir_label, expand=False)
                 for child in sorted(item.rglob("*"), key=lambda p: p.name.lower()):
                     if child.is_file():
-                        rel = child.relative_to(item)
-                        dir_node.add_leaf(Text(str(rel)), data=child)
+                        child_rel = str(child.relative_to(src_dir)) if src_dir else child.name
+                        child_label = Text(str(child.relative_to(item)))
+                        if child_rel in dirty:
+                            child_label.append(" 🔄", style=self._theme_color("accent"))
+                        dir_node.add_leaf(child_label, data=child)
 
     def _build_level(self, parent_node, path_key, dir_children, file_map, nodes) -> None:
         subdirs = sorted(dir_children.get(path_key, set()), key=str.lower)

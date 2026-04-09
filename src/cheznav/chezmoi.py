@@ -106,6 +106,10 @@ async def update() -> tuple[str, str, int]:
     return await _run(["update"])
 
 
+async def init() -> tuple[str, str, int]:
+    return await _run(["init"])
+
+
 async def data() -> str:
     stdout, stderr, rc = await _run(["data", "--format=json"])
     return _check(stdout, stderr, rc, "data")
