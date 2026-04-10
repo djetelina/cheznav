@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-10
+
 ### Added
 
 - Git status indicators: header shows uncommitted/ahead/behind counts, files with uncommitted source changes marked with 🔄
