@@ -10,6 +10,7 @@ Screen {
 
 #pane-tabs {
     height: 2;
+    background: $background;
 }
 
 #pane-tabs Tab {
@@ -44,10 +45,12 @@ Screen {
 }
 
 HomeTree, ManagedTree {
+    background: $background;
     scrollbar-color: $primary-darken-2;
 }
 
 HomeTree:focus, ManagedTree:focus {
+    background-tint: transparent;
     scrollbar-color: $primary;
 }
 

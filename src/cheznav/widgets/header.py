@@ -8,7 +8,7 @@ class Logo(Static):
     Logo {
         width: auto;
         height: 3;
-        background: $surface;
+        background: $background;
     }
     """
 
@@ -26,7 +26,7 @@ class StatusBar(Container):
     DEFAULT_CSS = """
     StatusBar {
         layout: horizontal;
-        background: $surface;
+        background: $background;
         width: 1fr;
         height: 3;
         border: round $accent;
@@ -107,7 +107,7 @@ class Header(Container):
     Header {
         layout: horizontal;
         height: 3;
-        background: $surface;
+        background: $background;
     }
     """
 

@@ -130,9 +130,10 @@ class ManagedTree(Tree):
                 total_diffs += child_diffs
                 total_dirty += child_dirty
                 dirname = child.data.rsplit("/", 1)[-1] if "/" in child.data else child.data
+                secondary = self._theme_color("secondary")
                 label = Text()
-                label.append(dirname, style="bold cyan")
-                label.append("/", style="dim cyan")
+                label.append(dirname, style=f"bold {secondary}")
+                label.append("/", style=f"dim {secondary}")
                 if child_diffs > 0:
                     label.append(f" ({child_diffs})", style=f"bold {self._theme_color('warning')}")
                 if child_dirty > 0:
@@ -165,7 +166,8 @@ class ManagedTree(Tree):
                 label.append(f"{ext.target_path}/", style=f"bold {warn}")
                 label.append(f" ⟳ {count} outdated", style=f"bold {warn}")
             else:
-                label.append(f"{ext.target_path}/", style="bold #8be9fd")
+                secondary = self._theme_color("secondary")
+                label.append(f"{ext.target_path}/", style=f"bold {secondary}")
                 label.append(f" ({ext.file_count} files)", style="dim")
             child.set_label(label)
 
@@ -189,7 +191,8 @@ class ManagedTree(Tree):
             )
 
             label = Text()
-            label.append(f"{ext_path}/", style="bold #8be9fd")
+            secondary = self._theme_color("secondary")
+            label.append(f"{ext_path}/", style=f"bold {secondary}")
             label.append(f" ({len(entries)} files)", style="dim")
 
             section.add_leaf(label, data=ext_data)
@@ -209,8 +212,9 @@ class ManagedTree(Tree):
                 config_node.add_leaf(label, data=item)
             elif item.is_dir():
                 dir_label = Text()
-                dir_label.append(item.name, style="bold cyan")
-                dir_label.append("/", style="dim cyan")
+                secondary = self._theme_color("secondary")
+                dir_label.append(item.name, style=f"bold {secondary}")
+                dir_label.append("/", style=f"dim {secondary}")
                 dir_node = config_node.add(dir_label, expand=False)
                 for child in sorted(item.rglob("*"), key=lambda p: p.name.lower()):
                     if child.is_file():
@@ -225,8 +229,9 @@ class ManagedTree(Tree):
         for dirname in subdirs:
             child_key = f"{path_key}/{dirname}" if path_key else dirname
             label = Text()
-            label.append(dirname, style="bold cyan")
-            label.append("/", style="dim cyan")
+            secondary = self._theme_color("secondary")
+            label.append(dirname, style=f"bold {secondary}")
+            label.append("/", style=f"dim {secondary}")
             node = parent_node.add(label, data=child_key, expand=False)
             nodes[child_key] = node
             self._build_level(node, child_key, dir_children, file_map, nodes)
