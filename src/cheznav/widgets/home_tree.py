@@ -106,11 +106,17 @@ class HomeTree(DirectoryTree):
 
     def render_label(self, node: TreeNode, base_style: Style, style: Style) -> Text:
         path = node.data.path if node.data else None
+        is_cursor = node == self.cursor_node
 
         if path and path.is_dir():
+            color = self._theme_color("secondary")
             label = Text()
-            label.append(path.name, style=base_style + style + Style(color="cyan", bold=True))
-            label.append("/", style=base_style + style + Style(color="cyan", dim=True))
+            if is_cursor:
+                label.append(path.name, style=base_style + style + Style(bold=True))
+                label.append("/", style=base_style + style + Style(dim=True))
+            else:
+                label.append(path.name, style=base_style + style + Style(color=color, bold=True))
+                label.append("/", style=base_style + style + Style(color=color, dim=True))
             return label
 
         if path and path.is_file() and path in self.managed_paths:
@@ -118,7 +124,10 @@ class HomeTree(DirectoryTree):
             git_dirty = path in self.git_dirty_paths
             color = self._theme_color("warning") if has_diff else self._theme_color("success")
             label = Text()
-            label.append(path.name, style=base_style + style + Style(color=color))
+            if is_cursor:
+                label.append(path.name, style=base_style + style)
+            else:
+                label.append(path.name, style=base_style + style + Style(color=color))
             if git_dirty:
                 label.append(" 🔄")
             entry = self.managed_entries.get(path)

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Auto-detect Textual theme from GTK settings (TEXTUAL_THEME env, GTK_THEME env, gtk-4.0/gtk-3.0 settings.ini)
+- Prefix matching for Catppuccin and Rose Pine GTK theme variants
+
+### Changed
+
+- All hardcoded colors replaced with theme-aware variables for cross-theme support
+- Unified background color across header, tabs, and tree panes
+
 ## [0.2.0] - 2026-04-10
 
 ### Added
