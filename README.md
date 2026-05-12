@@ -9,6 +9,8 @@
 ![PyPI - License](https://img.shields.io/pypi/l/cheznav)
 ![GitHub Repo stars](https://img.shields.io/github/stars/DJetelina/cheznav?style=flat&logo=github)
 
+<a title="This tool is Tool of The Week on Terminal Trove, The $HOME of all things in the terminal" href="https://terminaltrove.com/cheznav/"><img src="https://cdn.terminaltrove.com/media/badges/tool_of_the_week/svg/terminal_trove_tool_of_the_week_green_on_dark_grey_bg.svg" alt="Terminal Trove Tool of The Week" width=175/></a>
+
 A TUI for [chezmoi](https://www.chezmoi.io/).
 
 Dual-pane layout: local home directory on the left, chezmoi-managed files on the right.
