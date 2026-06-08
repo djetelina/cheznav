@@ -60,12 +60,16 @@ def set_dry_run(enabled: bool) -> None:
 
 
 def set_config_path(path: str | None) -> None:
-    global _config_path  # noqa: PLW0603
+    global _config_path, _source_path_cache  # noqa: PLW0603
     if path is None:
         _config_path = None
+        _source_path_cache = None
         return
     normalized = path.strip()
-    _config_path = normalized or None
+    new_value = normalized or None
+    if _config_path != new_value:
+        _source_path_cache = None
+    _config_path = new_value
 
 
 def command_prefix() -> list[str]:

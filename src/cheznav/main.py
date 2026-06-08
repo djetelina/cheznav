@@ -460,6 +460,10 @@ class CheznavApp(App):
             return managed.cursor_node.data
         return None
 
+    @staticmethod
+    def _chezmoi_cmd(*args: str) -> str:
+        return " ".join([*chezmoi.command_prefix(), *args])
+
     def _resolve_entry(self) -> ManagedEntry | None:
         """Get the selected ManagedEntry, checking managed tree first then home tree."""
         entry = self._get_managed_selected_entry()
@@ -535,8 +539,7 @@ class CheznavApp(App):
                 return
             target = str(path)
             flag_parts = [f"--{k}" for k, v in flags.items() if v]
-            parts = ["chezmoi", "add", *flag_parts, target]
-            cmd = " ".join(parts)
+            cmd = self._chezmoi_cmd("add", *flag_parts, target)
 
             def on_confirm(confirmed: bool | None) -> None:
                 if confirmed:
@@ -558,7 +561,7 @@ class CheznavApp(App):
         if node and isinstance(node.data, ExternalRoot):
             ext = node.data
             target = str(Path.home() / ext.target_path)
-            cmd = f"chezmoi apply --force {target}"
+            cmd = self._chezmoi_cmd("apply", "--force", target)
 
             def on_ext_confirm(confirmed: bool | None) -> None:
                 if confirmed:
@@ -572,7 +575,7 @@ class CheznavApp(App):
             self.notify("Select a managed file first", severity="warning")
             return
         target = str(entry.target_absolute)
-        cmd = f"chezmoi apply --force {target}"
+        cmd = self._chezmoi_cmd("apply", "--force", target)
 
         def on_confirm(confirmed: bool | None) -> None:
             if confirmed:
@@ -613,7 +616,7 @@ class CheznavApp(App):
             self.notify("Select a managed file first", severity="warning")
             return
         target = str(path)
-        cmd = f"chezmoi re-add {target}"
+        cmd = self._chezmoi_cmd("re-add", target)
 
         def on_confirm(confirmed: bool | None) -> None:
             if confirmed:
@@ -643,7 +646,7 @@ class CheznavApp(App):
             self.notify("Select a managed file first", severity="warning")
             return
         target = str(entry.target_absolute)
-        cmd = f"chezmoi forget {target}"
+        cmd = self._chezmoi_cmd("forget", target)
 
         def on_confirm(confirmed: bool | None) -> None:
             if confirmed:
@@ -657,7 +660,7 @@ class CheznavApp(App):
             self.notify("Select a managed file first", severity="warning")
             return
         target = str(entry.target_absolute)
-        cmd = f"chezmoi destroy --force {target}"
+        cmd = self._chezmoi_cmd("destroy", "--force", target)
 
         def on_confirm(confirmed: bool | None) -> None:
             if confirmed:
@@ -737,7 +740,7 @@ class CheznavApp(App):
             if not changes:
                 return
             modifier = ",".join(f"+{attr}" if enabled else f"no{attr}" for attr, enabled in changes.items())
-            cmd = f"chezmoi chattr {modifier} {target}"
+            cmd = self._chezmoi_cmd("chattr", modifier, target)
 
             def on_confirm(confirmed: bool | None) -> None:
                 if confirmed:
