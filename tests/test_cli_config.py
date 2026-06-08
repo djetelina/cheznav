@@ -27,6 +27,6 @@ def test_main_without_custom_config_does_not_set_it():
     ):
         main()
 
-    set_config_path.assert_not_called()
+    set_config_path.assert_called_once_with(None)
     app_cls.assert_called_once_with(dry_run=False)
     app_cls.return_value.run.assert_called_once()

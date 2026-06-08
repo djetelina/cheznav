@@ -810,8 +810,8 @@ def main() -> None:
         help="Use a custom chezmoi config file (equivalent to chezmoi --config PATH)",
     )
     args = parser.parse_args()
-    if args.chezmoi_config:
-        chezmoi.set_config_path(str(Path(args.chezmoi_config).expanduser()))
+    config_path = str(Path(args.chezmoi_config).expanduser()) if args.chezmoi_config else None
+    chezmoi.set_config_path(config_path)
     CheznavApp(dry_run=args.dry_run).run()
 
 
