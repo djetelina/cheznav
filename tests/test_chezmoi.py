@@ -10,6 +10,7 @@ from cheznav.chezmoi import (
     git_ahead_behind,
     git_status_porcelain,
     set_config_path,
+    source_path,
 )
 
 
@@ -146,3 +147,26 @@ class TestCommandPrefix:
     def test_blank_config_clears_prefix(self):
         set_config_path("   ")
         assert command_prefix() == ["chezmoi"]
+
+
+class TestSourcePathCache:
+    @pytest.mark.asyncio
+    async def test_cache_invalidated_when_config_changes(self):
+        expected_calls_after_config_change = 2
+        with patch("cheznav.chezmoi._run", new_callable=AsyncMock) as mock_run:
+            mock_run.side_effect = [
+                ("/source/default\n", "", 0),
+                ("/source/work\n", "", 0),
+            ]
+
+            set_config_path(None)
+            first = await source_path()
+            second = await source_path()
+            assert str(first) == "/source/default"
+            assert str(second) == "/source/default"
+            assert mock_run.await_count == 1
+
+            set_config_path("/tmp/work.toml")
+            third = await source_path()
+            assert str(third) == "/source/work"
+            assert mock_run.await_count == expected_calls_after_config_change
