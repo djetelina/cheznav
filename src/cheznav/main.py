@@ -605,7 +605,7 @@ class CheznavApp(App):
             self.notify("Select a managed file first", severity="warning")
             return
         with self.suspend():
-            subprocess.run(["chezmoi", "diff", str(entry.target_absolute)], check=False)
+            subprocess.run([*chezmoi.command_prefix(), "diff", str(entry.target_absolute)], check=False)
 
     async def action_home_re_add(self) -> None:
         path = self._get_home_selected_path()
@@ -801,7 +801,14 @@ class CheznavApp(App):
 def main() -> None:
     parser = argparse.ArgumentParser(description="TUI for chezmoi")
     parser.add_argument("--dry-run", "-n", action="store_true", help="Dry-run mode (no mutations)")
+    parser.add_argument(
+        "--chezmoi-config",
+        metavar="PATH",
+        help="Use a custom chezmoi config file (equivalent to chezmoi --config PATH)",
+    )
     args = parser.parse_args()
+    if args.chezmoi_config:
+        chezmoi.set_config_path(str(Path(args.chezmoi_config).expanduser()))
     CheznavApp(dry_run=args.dry_run).run()
 
 
