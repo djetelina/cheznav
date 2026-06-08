@@ -48,6 +48,7 @@ def _parse_attributes(source_relative: str) -> dict[str, bool]:
 
 
 _dry_run: bool = False
+_config_path: str | None = None
 
 # Commands that modify the filesystem — only these get the -n flag in dry-run mode
 _MUTATING_COMMANDS = frozenset({"add", "apply", "chattr", "destroy", "edit", "forget", "re-add", "update"})
@@ -58,12 +59,28 @@ def set_dry_run(enabled: bool) -> None:
     _dry_run = enabled
 
 
+def set_config_path(path: str | None) -> None:
+    global _config_path  # noqa: PLW0603
+    if path is None:
+        _config_path = None
+        return
+    normalized = path.strip()
+    _config_path = normalized or None
+
+
+def command_prefix() -> list[str]:
+    prefix = ["chezmoi"]
+    if _config_path:
+        prefix.extend(["--config", _config_path])
+    return prefix
+
+
 async def _run(args: list[str]) -> tuple[str, str, int]:
     if _dry_run and args and args[0] in _MUTATING_COMMANDS:
         args = ["-n", *args]
     args = ["--no-tty", *args]
     proc = await asyncio.create_subprocess_exec(
-        "chezmoi",
+        *command_prefix(),
         *args,
         stdin=asyncio.subprocess.DEVNULL,
         stdout=asyncio.subprocess.PIPE,
@@ -212,7 +229,7 @@ async def add_ignore(pattern: str) -> None:
 async def _run_git(args: list[str]) -> tuple[str, str, int]:
     """Run a git command via chezmoi git -- <args>."""
     proc = await asyncio.create_subprocess_exec(
-        "chezmoi",
+        *command_prefix(),
         "git",
         "--",
         *args,

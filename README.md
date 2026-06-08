@@ -41,6 +41,7 @@ yay -S cheznav
 ```bash
 cheznav            # normal
 cheznav --dry-run  # pass -n to all chezmoi calls
+cheznav --chezmoi-config ~/.config/chezmoi/work.toml  # use custom chezmoi config file
 ```
 
 <details>

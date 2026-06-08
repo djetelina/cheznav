@@ -6,8 +6,10 @@ import pytest
 
 from cheznav.chezmoi import (
     _parse_attributes,
+    command_prefix,
     git_ahead_behind,
     git_status_porcelain,
+    set_config_path,
 )
 
 
@@ -127,3 +129,20 @@ class TestGitAheadBehind:
         with _mock_run_git("\n"):
             result = await git_ahead_behind()
         assert result == (0, 0)
+
+
+class TestCommandPrefix:
+    def teardown_method(self):
+        set_config_path(None)
+
+    def test_default_prefix_without_custom_config(self):
+        set_config_path(None)
+        assert command_prefix() == ["chezmoi"]
+
+    def test_prefix_with_custom_config(self):
+        set_config_path("/tmp/chezmoi-work.toml")
+        assert command_prefix() == ["chezmoi", "--config", "/tmp/chezmoi-work.toml"]
+
+    def test_blank_config_clears_prefix(self):
+        set_config_path("   ")
+        assert command_prefix() == ["chezmoi"]
