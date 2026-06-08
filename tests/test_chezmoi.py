@@ -150,6 +150,9 @@ class TestCommandPrefix:
 
 
 class TestSourcePathCache:
+    def teardown_method(self):
+        set_config_path(None)
+
     @pytest.mark.asyncio
     async def test_cache_invalidated_when_config_changes(self):
         expected_calls_after_config_change = 2
