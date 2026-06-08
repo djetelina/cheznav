@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Auto-detect Textual theme from GTK settings (TEXTUAL_THEME env, GTK_THEME env, gtk-4.0/gtk-3.0 settings.ini)
 - Prefix matching for Catppuccin and Rose Pine GTK theme variants
+- New `--chezmoi-config PATH` CLI option to run cheznav with a custom chezmoi config file
 
 ### Changed
 
