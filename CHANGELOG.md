@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All hardcoded colors replaced with theme-aware variables for cross-theme support
 - Unified background color across header, tabs, and tree panes
 
+### Fixed
+
+- Vim-style `j`/`k` keys now navigate the trees (advertised in the help screen but never bound)
+- Help screen keybindings corrected (directory expand/collapse is `Space`, and `←`/`→` switch panes)
+
 ## [0.2.0] - 2026-04-10
 
 ### Added

@@ -13,9 +13,9 @@ HELP_TEXT = """\
   [b]v[/b]          Quick view file content
 
 [b]Navigation[/b]
-  [b]Tab[/b]        Switch pane
-  [b]← →[/b]       Expand/collapse directory
-  [b]↑ ↓ / j k[/b] Navigate tree
+  [b]Tab / ← →[/b]  Switch pane
+  [b]Space[/b]        Expand/collapse directory
+  [b]↑ ↓ / j k[/b]  Navigate tree
 
 [b]Diff View[/b]
   [b]Enter[/b]      Actions (keep disk / use target / close)

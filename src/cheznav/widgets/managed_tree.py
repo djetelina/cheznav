@@ -28,6 +28,8 @@ class ManagedTree(Tree):
     BINDINGS: ClassVar[list[BindingType]] = [
         Binding("enter", "open_actions", "Context menu"),
         Binding("space", "toggle_node", "Toggle", show=False),
+        Binding("j", "cursor_down", "Down", show=False),
+        Binding("k", "cursor_up", "Up", show=False),
     ]
 
     async def action_open_actions(self) -> None:
