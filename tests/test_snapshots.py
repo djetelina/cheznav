@@ -7,6 +7,8 @@ from unittest.mock import patch
 import pytest
 
 from cheznav.main import CheznavApp
+from cheznav.widgets.home_tree import HomeTree
+from cheznav.widgets.managed_tree import ManagedTree
 from tests.conftest import make_entry
 
 SNAPSHOT_HOME = Path("/tmp/cheznav-snapshot-home")
@@ -188,3 +190,29 @@ def test_git_ahead_behind_header(snap_compare, mock_home):
     """Header shows ahead/behind counts."""
     with _ctx(mock_home, git_ahead_behind=(3, 1)):
         assert snap_compare(CheznavApp(dry_run=True), terminal_size=(120, 40))
+
+
+async def test_vim_jk_navigation(mock_home):
+    """j/k move the tree cursor down/up, mirroring the arrow keys."""
+    with _ctx(mock_home):
+        app = CheznavApp(dry_run=True)
+        async with app.run_test(size=(120, 40)) as pilot:
+            await pilot.pause()
+            home = app.query_one(HomeTree)
+            managed = app.query_one(ManagedTree)
+
+            # right/left switch panes; pane switching is unaffected by the j/k bindings.
+            assert home.has_focus
+            await pilot.press("right")
+            assert managed.has_focus
+            await pilot.press("left")
+            assert home.has_focus
+
+            # j moves the cursor down, k moves it back up.
+            home.cursor_line = 0
+            await pilot.pause()
+            start = home.cursor_line
+            await pilot.press("j")
+            assert home.cursor_line == start + 1
+            await pilot.press("k")
+            assert home.cursor_line == start
