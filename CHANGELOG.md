@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Vim-style `j`/`k` keys now navigate the trees (advertised in the help screen but never bound)
 - Help screen keybindings corrected (directory expand/collapse is `Space`, and `←`/`→` switch panes)
+- `d` (diff) no longer just flickers when no pager is configured — falls back to a blocking pager (`less -R`, or `more` where `less` is unavailable) so the diff is actually shown ([#3](https://github.com/djetelina/cheznav/issues/3))
+- Help screen "Diff View" section corrected to describe the actual `d` shortcut (the in-app pane view it described never existed)
 
 ## [0.2.0] - 2026-04-10
 

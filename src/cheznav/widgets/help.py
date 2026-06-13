@@ -17,10 +17,8 @@ HELP_TEXT = """\
   [b]Space[/b]        Expand/collapse directory
   [b]↑ ↓ / j k[/b]  Navigate tree
 
-[b]Diff View[/b]
-  [b]Enter[/b]      Actions (keep disk / use target / close)
-  [b]Escape[/b]     Close diff
-  [b]Tab[/b]        Switch diff panes
+[b]Diff[/b]
+  [b]d[/b]          Show diff for selected file in your pager
 
 [b]Global[/b]
   [b]?[/b]          This help screen

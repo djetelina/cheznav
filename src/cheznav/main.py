@@ -3,6 +3,7 @@ import asyncio
 import json
 import logging
 import os
+import shutil
 import subprocess
 from collections.abc import Awaitable
 from pathlib import Path
@@ -607,8 +608,16 @@ class CheznavApp(App):
         if entry is None:
             self.notify("Select a managed file first", severity="warning")
             return
+        # chezmoi pages diff output via its configured pager, falling back to $PAGER.
+        # When neither is set it dumps to stdout and exits instantly, so the suspended
+        # TUI immediately repaints over it (a flicker, no visible diff). Provide a
+        # blocking fallback pager only when the user has none. Prefer `less -R` (its
+        # -R renders chezmoi's ANSI colors); fall back to `more`, which exists on both
+        # Windows and POSIX. An explicit chezmoi pager / $PAGER still takes precedence.
+        env = os.environ.copy()
+        env.setdefault("PAGER", "less -R" if shutil.which("less") else "more")
         with self.suspend():
-            subprocess.run([*chezmoi.command_prefix(), "diff", str(entry.target_absolute)], check=False)
+            subprocess.run([*chezmoi.command_prefix(), "diff", str(entry.target_absolute)], check=False, env=env)
 
     async def action_home_re_add(self) -> None:
         path = self._get_home_selected_path()
