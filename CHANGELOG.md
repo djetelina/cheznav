@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-15
+
 ### Added
 
 - Auto-detect Textual theme from GTK settings (TEXTUAL_THEME env, GTK_THEME env, gtk-4.0/gtk-3.0 settings.ini)
