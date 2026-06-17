@@ -1,6 +1,6 @@
 [project]
 name = "cheznav"
-version = "0.3.0"
+version = "0.4.0"
 description = "TUI for chezmoi"
 requires-python = ">=3.14"
 dependencies = [

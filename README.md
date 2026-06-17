@@ -42,6 +42,7 @@ yay -S cheznav
 cheznav            # normal
 cheznav --dry-run  # pass -n to all chezmoi calls
 cheznav --chezmoi-config ~/.config/chezmoi/work.toml  # use custom chezmoi config file
+cheznav info       # print cheznav/chezmoi versions and config status, then exit
 ```
 
 <details>
