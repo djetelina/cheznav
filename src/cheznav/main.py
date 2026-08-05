@@ -17,6 +17,7 @@ from textual.widgets import DirectoryTree, Footer, Tab, Tabs, Tree
 
 from cheznav import THEME, chezmoi
 from cheznav.chezmoi import ManagedEntry
+from cheznav.info import print_info
 from cheznav.utils import is_binary, is_binary_content
 from cheznav.widgets import (
     ActionMenu,
@@ -818,8 +819,16 @@ def main() -> None:
         metavar="PATH",
         help="Use a custom chezmoi config file (equivalent to chezmoi --config PATH)",
     )
+    subparsers = parser.add_subparsers(dest="command")
+    subparsers.add_parser("info", help="Print cheznav/chezmoi versions and config status, then exit")
     args = parser.parse_args()
+
     config_path = str(Path(args.chezmoi_config).expanduser()) if args.chezmoi_config else None
+
+    if args.command == "info":
+        print_info(config_path)
+        return
+
     chezmoi.set_config_path(config_path)
     CheznavApp(dry_run=args.dry_run).run()
 

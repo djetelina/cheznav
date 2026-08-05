@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-17
+
+### Added
+
+- New `cheznav info` subcommand for quickly diagnosing your setup. It prints the cheznav and chezmoi versions, whether chezmoi is installed, the detected chezmoi config file, and whether a source directory is initialized. It runs non-interactively (never launches the TUI), which also gives packagers a real command to smoke-test the install against.
+
 ## [0.3.0] - 2026-06-15
 
 ### Added
